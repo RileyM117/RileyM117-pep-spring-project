@@ -8,5 +8,5 @@ import com.example.entity.Message;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message,Integer>{
-    // List<Message> findByPosted_By(int id);
+    List<Message> findByPostedBy(int id);
 }

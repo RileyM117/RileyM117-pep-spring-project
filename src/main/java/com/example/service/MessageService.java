@@ -22,21 +22,34 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
+    public Message updateMessageById(int messageId, Message message) {
+        Optional<Message> existingMessage = messageRepository.findById(messageId);
+        if (existingMessage.isPresent()) {
+            Message fullExistingMessage = existingMessage.get();
+            fullExistingMessage.setMessageText(message.getMessageText());
+            messageRepository.save(fullExistingMessage);
+            return fullExistingMessage;
+        } else {
+            return null;
+        }
+    }
+
     public Message getMessageById(int id) {
         Optional <Message> message = messageRepository.findById(id);
         if (message.isPresent()) {
             return message.get();
+        } else {
+            return null;
         }
-        return null;
     }
 
     public List<Message> getAllMessages() {
         return messageRepository.findAll();
     }
 
-    // public List<Message> getAllMessagesByUserId(int id) {
-        // return messageRepository.findByPosted_By(id);
-    // }
+    public List<Message> getAllMessagesByUserId(int id) {
+        return messageRepository.findByPostedBy(id);
+    }
 
     public Message deleteMessageById(int id){
         Optional<Message> message = messageRepository.findById(id);
