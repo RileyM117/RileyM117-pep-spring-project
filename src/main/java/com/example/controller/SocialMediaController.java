@@ -1,6 +1,11 @@
 package com.example.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,14 +33,59 @@ public class SocialMediaController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Account> addAccount(@RequestBody Account account) {
-        Account addedAccount = accountService.addAccount(account);
-        return ResponseEntity.status(200).body(addedAccount);
+    public ResponseEntity<Account> addAccountHandler(@RequestBody Account account) {
+        if (accountService.getAccountByUsername(account.getUsername()) != null){
+            return ResponseEntity.status(409).build();
+        } else if (account.getUsername() == "" || account.getPassword().length() < 4) {
+            return ResponseEntity.status(400).build();
+        } else {
+            Account addedAccount = accountService.addAccount(account);
+            return ResponseEntity.status(200).body(addedAccount);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Account> LoginHandler(@RequestBody Account account) {
+        Account existingAccount = accountService.getAccountByUsername(account.getUsername());
+        if (existingAccount == null || !existingAccount.getPassword().equals(account.getPassword())) {
+            return ResponseEntity.status(401).build();
+            
+        } else {
+            return ResponseEntity.status(200).body(existingAccount);
+        }
     }
 
     @PostMapping("/messages")
     public ResponseEntity<Message> createNewMessage(@RequestBody Message message) {
-        Message addedMessage = messageService.createNewMessage(message);
-        return ResponseEntity.status(200).body(addedMessage);
+        Account account = accountService.getAccountById(message.getPostedBy());
+        if (message.getMessageText() == "" || message.getMessageText().length() > 255 || account == null) {
+            return ResponseEntity.status(400).build();
+        } else {
+            Message addedMessage = messageService.createNewMessage(message);
+            return ResponseEntity.status(200).body(addedMessage);
+        }
     }
+
+    @GetMapping("/messages")
+    public ResponseEntity<List<Message>> getAllMessages() {
+        List<Message> messages = messageService.getAllMessages();
+        return ResponseEntity.status(200).body(messages);
+    }
+
+    @GetMapping("/messages/{messageId}")
+    public ResponseEntity<Message> getMessageById(@PathVariable int messageId) {
+        Message existingMessage = messageService.getMessageById(messageId);
+        return ResponseEntity.status(200).body(existingMessage);
+    }
+
+    @DeleteMapping("/messages/{messageId}")
+    public ResponseEntity<Integer> deleteMessageById(@PathVariable int messageId) {
+        Message message = messageService.getMessageById(messageId);
+        if (message != null) {
+            messageService.deleteMessageById(messageId);
+            return ResponseEntity.status(200).body(1);
+        }
+        return ResponseEntity.status(200).build();
+    }
+
 }
